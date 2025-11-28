@@ -50,6 +50,14 @@
                 </ul>
 
                 <ul class="navbar-nav">
+                    <li class="nav-item me-3">
+                        <span class="navbar-text">
+                            <span id="system-status" class="badge bg-success">
+                                <i class="fas fa-circle me-1" style="font-size: 0.7em;"></i>
+                                系統正常
+                            </span>
+                        </span>
+                    </li>
                     <li class="nav-item">
                         <span class="navbar-text">
                             <i class="fas fa-clock me-1"></i>
@@ -84,8 +92,59 @@
                     second: '2-digit'
                 });
         }
+
+        // Update system status (安全版本，防止 XSS)
+        async function updateSystemStatus() {
+            const statusElement = document.getElementById('system-status');
+            if (!statusElement) return;
+
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                // 清除現有內容
+                statusElement.textContent = '';
+
+                if (response.ok && data.status === 'healthy') {
+                    statusElement.className = 'badge bg-success';
+
+                    // 安全地創建 DOM 元素
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-circle me-1';
+                    icon.style.fontSize = '0.7em';
+
+                    statusElement.appendChild(icon);
+                    statusElement.appendChild(document.createTextNode('系統正常'));
+                } else {
+                    statusElement.className = 'badge bg-warning';
+
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-exclamation-triangle me-1';
+                    icon.style.fontSize = '0.7em';
+
+                    statusElement.appendChild(icon);
+                    statusElement.appendChild(document.createTextNode('系統警告'));
+                }
+            } catch (error) {
+                statusElement.className = 'badge bg-danger';
+                statusElement.textContent = '';
+
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-times-circle me-1';
+                icon.style.fontSize = '0.7em';
+
+                statusElement.appendChild(icon);
+                statusElement.appendChild(document.createTextNode('系統異常'));
+            }
+        }
+
+        // Initialize
         updateTime();
+        updateSystemStatus();
+
+        // Update intervals
         setInterval(updateTime, 1000);
+        setInterval(updateSystemStatus, 30000); // Check system status every 30 seconds
     </script>
 
     {% block scripts %}{% endblock %}
