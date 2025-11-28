@@ -1,0 +1,424 @@
+/*
+DevSecOps SOC Dashboard - 自定義樣式
+針對資安監控介面的專業視覺設計
+*/
+
+:root {
+    /* SOC 專用色彩主題 */
+    --soc-primary: #0d6efd;
+    --soc-danger: #dc3545;
+    --soc-warning: #ffc107;
+    --soc-success: #198754;
+    --soc-info: #0dcaf0;
+    --soc-dark: #212529;
+    --soc-secondary: #6c757d;
+
+    /* 日誌源專用顏色 */
+    --palo-alto: #FF6B35;
+    --fortigate: #004E89;
+    --spam-filter: #F77F00;
+    --trend-email: #FCBF49;
+    --trend-apex: #003049;
+    --windows-events: #669BBC;
+    --manage-engine: #C1121F;
+
+    /* 漸層背景 */
+    --gradient-dark: linear-gradient(135deg, #1a1d23 0%, #2c3e50 100%);
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+/* 全局樣式優化 */
+body {
+    background: var(--gradient-dark);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* 導航列增強 */
+.navbar {
+    background: var(--gradient-primary) !important;
+    border-bottom: 3px solid var(--soc-primary);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.3rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.navbar-nav .nav-link {
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin: 0 5px;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+}
+
+.navbar-nav .nav-link.active {
+    background-color: rgba(255,255,255,0.2);
+    border-bottom: 2px solid #fff;
+}
+
+/* 卡片樣式增強 */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.card.bg-secondary {
+    background: rgba(52, 58, 64, 0.8) !important;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card.bg-dark {
+    background: rgba(33, 37, 41, 0.9) !important;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 威脅等級指示卡 */
+.card.bg-danger {
+    background: var(--gradient-danger) !important;
+    animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-danger {
+    0% { box-shadow: 0 4px 20px rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 4px 30px rgba(220, 53, 69, 0.6); }
+    100% { box-shadow: 0 4px 20px rgba(220, 53, 69, 0.3); }
+}
+
+.card.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%) !important;
+}
+
+.card.bg-info {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%) !important;
+}
+
+.card.bg-success {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important;
+}
+
+/* 日誌源狀態卡片 */
+.log-source-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.log-source-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg,
+        var(--palo-alto) 0%,
+        var(--fortigate) 16.67%,
+        var(--spam-filter) 33.33%,
+        var(--trend-email) 50%,
+        var(--trend-apex) 66.67%,
+        var(--windows-events) 83.33%,
+        var(--manage-engine) 100%);
+}
+
+/* 進度條樣式 */
+.progress {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg,
+        rgba(255,255,255,0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255,255,255,0.2) 50%,
+        rgba(255,255,255,0.2) 75%,
+        transparent 75%);
+    background-size: 20px 20px;
+    animation: progress-stripes 1s linear infinite;
+}
+
+@keyframes progress-stripes {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 0; }
+}
+
+/* 表格樣式增強 */
+.table-dark {
+    background-color: rgba(33, 37, 41, 0.9);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-dark th {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    border-color: rgba(255,255,255,0.2);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table-dark td {
+    border-color: rgba(255,255,255,0.1);
+    vertical-align: middle;
+}
+
+.table-dark tbody tr:hover {
+    background-color: rgba(255,255,255,0.05);
+    transition: background-color 0.3s ease;
+}
+
+/* 徽章樣式增強 */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,255,255,0.3) 50%,
+        transparent 100%);
+    transition: left 0.6s ease;
+}
+
+.badge:hover::before {
+    left: 100%;
+}
+
+/* 按鈕樣式增強 */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-warning:hover,
+.btn-outline-info:hover,
+.btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* 表單控制元件樣式 */
+.form-control.bg-dark,
+.form-select.bg-dark {
+    background-color: rgba(33, 37, 41, 0.8) !important;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control.bg-dark:focus,
+.form-select.bg-dark:focus {
+    background-color: rgba(33, 37, 41, 0.9) !important;
+    border-color: var(--soc-primary);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    color: #fff !important;
+}
+
+/* 查詢結果區域 */
+.results-container {
+    animation: slideInUp 0.5s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chart.js 容器優化 */
+.chart-container {
+    position: relative;
+    height: 300px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* 載入動畫 */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top: 2px solid #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .table-responsive {
+        border-radius: 8px;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding: 0 10px;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .table th,
+    .table td {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+}
+
+/* 特殊效果 */
+.glow-effect {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
+    }
+    to {
+        box-shadow: 0 0 20px rgba(13, 110, 253, 0.8);
+    }
+}
+
+/* Kill Chain 視覺化 */
+.kill-chain-stage {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.kill-chain-stage:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* 自定義滾動條 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+/* 狀態指示器 */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-online {
+    background-color: var(--soc-success);
+    animation: pulse-online 2s infinite;
+}
+
+.status-offline {
+    background-color: var(--soc-danger);
+}
+
+.status-warning {
+    background-color: var(--soc-warning);
+}
+
+@keyframes pulse-online {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}

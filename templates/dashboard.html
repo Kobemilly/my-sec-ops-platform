@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2">
+                <i class="fas fa-shield-alt text-primary me-2"></i>
+                SOC 安全運營儀表板
+            </h1>
+            <div class="alert alert-success mb-0 py-2 px-3" role="alert">
+                <i class="fas fa-check-circle me-1"></i>
+                系統運行正常
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 威脅概覽統計 -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card bg-danger h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold small">高危威脅</div>
+                        <div class="h4 mb-0">23</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card bg-warning h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold small text-dark">中危告警</div>
+                        <div class="h4 mb-0 text-dark">156</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation fa-2x text-dark"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card bg-info h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold small">低危事件</div>
+                        <div class="h4 mb-0">1,284</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-info-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card bg-success h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold small">已處理</div>
+                        <div class="h4 mb-0">8,547</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 7 大日誌源狀態 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    日誌源狀態監控
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for source_id, source in log_sources.items() %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="card h-100" style="border-left: 4px solid {{ source.color }};">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title text-light mb-1">{{ source.name }}</h6>
+                                        <p class="card-text small text-muted mb-2">{{ source.description }}</p>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-circle me-1" style="font-size: 0.7em;"></i>
+                                            線上
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small text-muted">事件數</div>
+                                        <div class="h6 text-light">{{ (range(50, 1000) | random) }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>今日活動</span>
+                                        <span>{{ (range(80, 100) | random) }}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar"
+                                             style="width: {{ (range(80, 100) | random) }}%; background-color: {{ source.color }};"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 威脅趨勢圖表 -->
+<div class="row mb-4">
+    <div class="col-xl-8 mb-3">
+        <div class="card bg-secondary h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    24小時威脅趨勢
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="threatTrendChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 mb-3">
+        <div class="card bg-secondary h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    威脅類型分佈
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="threatTypeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最新告警 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bell me-2"></i>
+                    最新安全告警
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>時間</th>
+                                <th>嚴重性</th>
+                                <th>來源</th>
+                                <th>告警內容</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-11-27 14:23:15</td>
+                                <td><span class="badge bg-danger">高危</span></td>
+                                <td>Palo Alto FW</td>
+                                <td>偵測到可疑外連活動 - IP: 185.220.101.42</td>
+                                <td><span class="badge bg-warning">處理中</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-11-27 14:18:32</td>
+                                <td><span class="badge bg-warning text-dark">中危</span></td>
+                                <td>Trend Apex</td>
+                                <td>端點異常程序執行 - Host: WS-001</td>
+                                <td><span class="badge bg-success">已處理</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-11-27 14:15:47</td>
+                                <td><span class="badge bg-danger">高危</span></td>
+                                <td>Email Security</td>
+                                <td>釣魚郵件攔截 - 目標用戶: john@company.com</td>
+                                <td><span class="badge bg-success">已處理</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-11-27 14:12:03</td>
+                                <td><span class="badge bg-info">低危</span></td>
+                                <td>Windows Event</td>
+                                <td>異常登入嘗試 - 用戶: admin@domain.local</td>
+                                <td><span class="badge bg-warning">處理中</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 威脅趨勢圖表
+    const threatTrendCtx = document.getElementById('threatTrendChart').getContext('2d');
+    new Chart(threatTrendCtx, {
+        type: 'line',
+        data: {
+            labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+            datasets: [{
+                label: '高危威脅',
+                data: [12, 8, 15, 23, 18, 25, 20],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4
+            }, {
+                label: '中危告警',
+                data: [45, 38, 62, 78, 85, 92, 88],
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: 'white' }
+                }
+            },
+            scales: {
+                x: { ticks: { color: 'white' } },
+                y: { ticks: { color: 'white' } }
+            }
+        }
+    });
+
+    // 威脅類型分佈圖表
+    const threatTypeCtx = document.getElementById('threatTypeChart').getContext('2d');
+    new Chart(threatTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['惡意軟體', '釣魚攻擊', '異常流量', '權限濫用', '其他'],
+            datasets: [{
+                data: [35, 25, 20, 15, 5],
+                backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#6f42c1']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: 'white', fontSize: 12 }
+                }
+            }
+        }
+    });
+
+    // 每 30 秒刷新數據
+    setInterval(function() {
+        // 這裡將來可以加入 AJAX 調用來更新數據
+        console.log('Refreshing dashboard data...');
+    }, 30000);
+</script>
+{% endblock %}

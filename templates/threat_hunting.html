@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2">
+            <i class="fas fa-crosshairs text-primary me-2"></i>
+            威脅獵捕分析中心
+        </h1>
+        <p class="text-muted">使用高級查詢和機器學習技術主動尋找潛在威脅</p>
+    </div>
+</div>
+
+<!-- 查詢介面 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    威脅獵捕查詢
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="huntingForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="logSource" class="form-label">日誌源</label>
+                            <select class="form-select bg-dark text-light" id="logSource">
+                                <option value="">全部日誌源</option>
+                                {% for source_id, source in log_sources.items() %}
+                                <option value="{{ source_id }}">{{ source.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="timeRange" class="form-label">時間範圍</label>
+                            <select class="form-select bg-dark text-light" id="timeRange">
+                                <option value="1h">過去 1 小時</option>
+                                <option value="6h">過去 6 小時</option>
+                                <option value="24h" selected>過去 24 小時</option>
+                                <option value="7d">過去 7 天</option>
+                                <option value="30d">過去 30 天</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="huntingQuery" class="form-label">Elasticsearch DSL 查詢</label>
+                            <textarea class="form-control bg-dark text-light" id="huntingQuery" rows="6"
+                                placeholder="輸入 Elasticsearch DSL 查詢條件...">{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"message": "suspicious"}},
+        {"range": {"@timestamp": {"gte": "now-1h"}}}
+      ]
+    }
+  }
+}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-play me-1"></i>執行查詢
+                            </button>
+                            <button type="button" class="btn btn-secondary me-2" id="clearQuery">
+                                <i class="fas fa-eraser me-1"></i>清除
+                            </button>
+                            <button type="button" class="btn btn-info" id="loadTemplate">
+                                <i class="fas fa-file-code me-1"></i>加載模板
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 查詢結果 -->
+<div class="row mb-4" id="resultsSection" style="display: none;">
+    <div class="col-12">
+        <div class="card bg-secondary">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    查詢結果
+                </h5>
+                <div>
+                    <span class="badge bg-primary" id="resultCount">0 筆結果</span>
+                    <span class="badge bg-info" id="queryTime">查詢時間: 0ms</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 結果圖表 -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <canvas id="timelineChart" height="80"></canvas>
+                    </div>
+                    <div class="col-md-4">
+                        <canvas id="sourceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 結果表格 -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>時間</th>
+                                <th>日誌源</th>
+                                <th>嚴重性</th>
+                                <th>內容</th>
+                                <th>動作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 查詢結果將在這裡顯示 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 威脅獵捕模板 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-magic me-2"></i>
+                    常用威脅獵捕模板
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 bg-dark">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning">
+                                    <i class="fas fa-virus me-1"></i>惡意軟體活動
+                                </h6>
+                                <p class="card-text small">檢測可疑程序執行和文件操作</p>
+                                <button class="btn btn-sm btn-outline-warning" onclick="loadMalwareTemplate()">
+                                    使用模板
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 bg-dark">
+                            <div class="card-body">
+                                <h6 class="card-title text-danger">
+                                    <i class="fas fa-network-wired me-1"></i>異常網路流量
+                                </h6>
+                                <p class="card-text small">分析大量數據傳輸和異常連線</p>
+                                <button class="btn btn-sm btn-outline-danger" onclick="loadNetworkTemplate()">
+                                    使用模板
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 bg-dark">
+                            <div class="card-body">
+                                <h6 class="card-title text-info">
+                                    <i class="fas fa-user-secret me-1"></i>權限濫用
+                                </h6>
+                                <p class="card-text small">監控特權帳號異常行為</p>
+                                <button class="btn btn-sm btn-outline-info" onclick="loadPrivilegeTemplate()">
+                                    使用模板
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 攻擊鏈分析模態框 -->
+<div class="modal fade" id="killChainModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-sitemap me-2"></i>攻擊鏈分析
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="killChainVisualization">
+                    <!-- 攻擊鏈視覺化將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 查詢表單處理
+    document.getElementById('huntingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        executeHuntingQuery();
+    });
+
+    // 清除查詢
+    document.getElementById('clearQuery').addEventListener('click', function() {
+        document.getElementById('huntingQuery').value = '';
+        document.getElementById('resultsSection').style.display = 'none';
+    });
+
+    // 執行威脅獵捕查詢
+    function executeHuntingQuery() {
+        const query = document.getElementById('huntingQuery').value;
+        const logSource = document.getElementById('logSource').value;
+        const timeRange = document.getElementById('timeRange').value;
+
+        if (!query.trim()) {
+            alert('請輸入查詢條件');
+            return;
+        }
+
+        // 模擬查詢執行
+        showLoadingSpinner();
+
+        setTimeout(function() {
+            // 模擬查詢結果
+            const mockResults = generateMockResults();
+            displayResults(mockResults);
+            hideLoadingSpinner();
+            document.getElementById('resultsSection').style.display = 'block';
+        }, 1500);
+    }
+
+    // 生成模擬查詢結果
+    function generateMockResults() {
+        const sources = Object.keys({{ log_sources | tojson }});
+        const severities = ['高危', '中危', '低危'];
+        const results = [];
+
+        for (let i = 0; i < 50; i++) {
+            const date = new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000);
+            results.push({
+                timestamp: date.toISOString(),
+                source: sources[Math.floor(Math.random() * sources.length)],
+                severity: severities[Math.floor(Math.random() * severities.length)],
+                message: `威脅事件 #${i + 1} - 偵測到可疑活動`,
+                score: Math.floor(Math.random() * 100)
+            });
+        }
+
+        return results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+
+    // 顯示查詢結果（安全版本）
+    function displayResults(results) {
+        document.getElementById('resultCount').textContent = `${results.length} 筆結果`;
+        document.getElementById('queryTime').textContent = `查詢時間: ${Math.floor(Math.random() * 1000) + 100}ms`;
+
+        // 更新結果表格
+        const tbody = document.querySelector('#resultsTable tbody');
+        tbody.textContent = ''; // 清除現有內容
+
+        results.slice(0, 20).forEach((result, index) => {
+            const row = tbody.insertRow();
+            const severityClass = result.severity === '高危' ? 'bg-danger' :
+                                  result.severity === '中危' ? 'bg-warning text-dark' : 'bg-info';
+
+            // 安全地建立表格行
+            const cells = [
+                new Date(result.timestamp).toLocaleString('zh-TW'),
+                result.source,
+                result.severity,
+                result.message,
+                ''  // 動作按鈕將稍後添加
+            ];
+
+            cells.forEach((cellContent, cellIndex) => {
+                const cell = row.insertCell(cellIndex);
+                if (cellIndex === 2) {  // 嚴重性欄位
+                    const badge = document.createElement('span');
+                    badge.className = `badge ${severityClass}`;
+                    badge.textContent = cellContent;
+                    cell.appendChild(badge);
+                } else if (cellIndex === 4) {  // 動作欄位
+                    const analyzeBtn = document.createElement('button');
+                    analyzeBtn.className = 'btn btn-sm btn-outline-primary me-1';
+                    analyzeBtn.onclick = () => analyzeEvent(result.timestamp);
+                    analyzeBtn.innerHTML = '<i class="fas fa-search"></i>';
+
+                    const killChainBtn = document.createElement('button');
+                    killChainBtn.className = 'btn btn-sm btn-outline-warning';
+                    killChainBtn.onclick = () => showKillChain(result.timestamp);
+                    killChainBtn.innerHTML = '<i class="fas fa-sitemap"></i>';
+
+                    cell.appendChild(analyzeBtn);
+                    cell.appendChild(killChainBtn);
+                } else {
+                    cell.textContent = cellContent;
+                }
+            });
+        });
+
+        // 更新圖表
+        updateChartsWithResults(results);
+    }
+
+    // 顯示 Kill Chain 分析（防 XSS 安全版本）
+    function showKillChain(eventId) {
+        const modal = new bootstrap.Modal(document.getElementById('killChainModal'));
+        modal.show();
+
+        // 安全的 DOM 操作，防止 XSS 攻擊
+        const visualization = document.getElementById('killChainVisualization');
+        visualization.textContent = ''; // 清除內容
+
+        // 建立容器
+        const container = document.createElement('div');
+        container.className = 'text-center';
+
+        // 標題
+        const title = document.createElement('h6');
+        title.textContent = `攻擊鏈分析 - 事件 ${eventId}`;
+        container.appendChild(title);
+
+        // Kill Chain 階段
+        const row = document.createElement('div');
+        row.className = 'row mt-4';
+
+        const stages = [
+            {name: '偵察', color: 'bg-warning text-dark'},
+            {name: '武器化', color: 'bg-danger'},
+            {name: '投遞', color: 'bg-info'},
+            {name: '利用', color: 'bg-success'},
+            {name: '植入', color: 'bg-secondary'},
+            {name: 'C2', color: 'bg-primary'}
+        ];
+
+        stages.forEach(stage => {
+            const col = document.createElement('div');
+            col.className = 'col-md-2 mb-2';
+
+            const stageDiv = document.createElement('div');
+            stageDiv.className = `${stage.color} p-2 rounded text-center`;
+
+            const small = document.createElement('small');
+            small.textContent = stage.name;
+            stageDiv.appendChild(small);
+
+            col.appendChild(stageDiv);
+            row.appendChild(col);
+        });
+
+        container.appendChild(row);
+
+        // 描述
+        const description = document.createElement('p');
+        description.className = 'mt-3 text-muted';
+        description.textContent = '基於日誌關聯分析的攻擊鏈重建';
+        container.appendChild(description);
+
+        visualization.appendChild(container);
+    }
+
+    // 更新結果圖表
+    function updateChartsWithResults(results) {
+        // 時間線圖表
+        const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+        const hourlyData = processTimelineData(results);
+
+        new Chart(timelineCtx, {
+            type: 'line',
+            data: {
+                labels: hourlyData.labels,
+                datasets: [{
+                    label: '事件數量',
+                    data: hourlyData.data,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: 'white' } }
+                },
+                scales: {
+                    x: { ticks: { color: 'white' } },
+                    y: { ticks: { color: 'white' } }
+                }
+            }
+        });
+
+        // 來源分佈圖表
+        const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+        const sourceData = processSourceData(results);
+
+        new Chart(sourceCtx, {
+            type: 'pie',
+            data: {
+                labels: sourceData.labels,
+                datasets: [{
+                    data: sourceData.data,
+                    backgroundColor: sourceData.colors
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: 'white', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // 處理時間線數據
+    function processTimelineData(results) {
+        const hourly = {};
+        results.forEach(result => {
+            const hour = new Date(result.timestamp).getHours();
+            hourly[hour] = (hourly[hour] || 0) + 1;
+        });
+
+        const labels = [];
+        const data = [];
+        for (let i = 0; i < 24; i++) {
+            labels.push(`${i}:00`);
+            data.push(hourly[i] || 0);
+        }
+
+        return { labels, data };
+    }
+
+    // 處理來源數據
+    function processSourceData(results) {
+        const sources = {};
+        const logSources = {{ log_sources | tojson }};
+
+        results.forEach(result => {
+            sources[result.source] = (sources[result.source] || 0) + 1;
+        });
+
+        const labels = Object.keys(sources).map(key => logSources[key]?.name || key);
+        const data = Object.values(sources);
+        const colors = Object.keys(sources).map(key => logSources[key]?.color || '#6c757d');
+
+        return { labels, data, colors };
+    }
+
+    // 威脅獵捕模板函數
+    function loadMalwareTemplate() {
+        const template = `{
+  "query": {
+    "bool": {
+      "should": [
+        {"match": {"process.executable": "*.exe"}},
+        {"match": {"file.extension": "bat"}},
+        {"match": {"registry.path": "*\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run*"}}
+      ],
+      "filter": [
+        {"range": {"@timestamp": {"gte": "now-1h"}}}
+      ]
+    }
+  },
+  "aggs": {
+    "processes": {
+      "terms": {"field": "process.name", "size": 10}
+    }
+  }
+}`;
+        document.getElementById('huntingQuery').value = template;
+    }
+
+    function loadNetworkTemplate() {
+        const template = `{
+  "query": {
+    "bool": {
+      "must": [
+        {"range": {"network.bytes": {"gte": 1000000}}},
+        {"bool": {"must_not": [
+          {"terms": {"destination.ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]}}
+        ]}}
+      ],
+      "filter": [
+        {"range": {"@timestamp": {"gte": "now-6h"}}}
+      ]
+    }
+  },
+  "aggs": {
+    "top_destinations": {
+      "terms": {"field": "destination.ip", "size": 20}
+    }
+  }
+}`;
+        document.getElementById('huntingQuery').value = template;
+    }
+
+    function loadPrivilegeTemplate() {
+        const template = `{
+  "query": {
+    "bool": {
+      "must": [
+        {"terms": {"user.name": ["administrator", "admin", "root"]}},
+        {"match": {"event.action": "logon"}}
+      ],
+      "should": [
+        {"range": {"@timestamp": {"gte": "now-1h", "lte": "now-30m"}}},
+        {"term": {"source.ip": "external"}}
+      ],
+      "filter": [
+        {"range": {"@timestamp": {"gte": "now-24h"}}}
+      ]
+    }
+  }
+}`;
+        document.getElementById('huntingQuery').value = template;
+    }
+
+    // 工具函數
+    function showLoadingSpinner() {
+        console.log('Loading...');
+    }
+
+    function hideLoadingSpinner() {
+        console.log('Loading complete');
+    }
+
+    function analyzeEvent(eventId) {
+        alert('深度分析功能開發中...');
+    }
+</script>
+{% endblock %}
